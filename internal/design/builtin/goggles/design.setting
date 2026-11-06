@@ -161,9 +161,9 @@ PathDotMask = EllipseMask {
 PathBright = Background {
 	Inputs = {
 		UseFrameFormatSettings = Input { Value = 1, },
-		TopLeftRed = Input { Value = {{main.r}}, },
-		TopLeftGreen = Input { Value = {{main.g}}, },
-		TopLeftBlue = Input { Value = {{main.b}}, },
+		TopLeftRed = Input { Expression = "{{main.r}} * (HUDData3.NumberIn6)", },
+		TopLeftGreen = Input { Expression = "{{main.g}} * (HUDData3.NumberIn6)", },
+		TopLeftBlue = Input { Expression = "{{main.b}} * (HUDData3.NumberIn6)", },
 		TopLeftAlpha = Input { Expression = "HUDData3.NumberIn6", },
 		EffectMask = Input { SourceOp = "PathDotMask", Source = "Mask", },
 	},
@@ -251,9 +251,9 @@ SticksShade = Background {
 SticksDraw = Background {
 	Inputs = {
 		UseFrameFormatSettings = Input { Value = 1, },
-		TopLeftRed = Input { Value = {{main.r}}, },
-		TopLeftGreen = Input { Value = {{main.g}}, },
-		TopLeftBlue = Input { Value = {{main.b}}, },
+		TopLeftRed = Input { Expression = "{{main.r}} * (HUDData2.NumberIn5)", },
+		TopLeftGreen = Input { Expression = "{{main.g}} * (HUDData2.NumberIn5)", },
+		TopLeftBlue = Input { Expression = "{{main.b}} * (HUDData2.NumberIn5)", },
 		TopLeftAlpha = Input { Expression = "HUDData2.NumberIn5", },
 		EffectMask = Input { SourceOp = "SticksDotR", Source = "Mask", },
 	},
@@ -301,9 +301,9 @@ FlipBoxMask = RectangleMask {
 FlipBox = Background {
 	Inputs = {
 		UseFrameFormatSettings = Input { Value = 1, },
-		TopLeftRed = Input { Value = {{main.r}}, },
-		TopLeftGreen = Input { Value = {{main.g}}, },
-		TopLeftBlue = Input { Value = {{main.b}}, },
+		TopLeftRed = Input { Expression = "{{main.r}} * (HUDData3.NumberIn7)", },
+		TopLeftGreen = Input { Expression = "{{main.g}} * (HUDData3.NumberIn7)", },
+		TopLeftBlue = Input { Expression = "{{main.b}} * (HUDData3.NumberIn7)", },
 		TopLeftAlpha = Input { Expression = "HUDData3.NumberIn7", },
 		EffectMask = Input { SourceOp = "FlipBoxMask", Source = "Mask", },
 	},

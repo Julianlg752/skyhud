@@ -145,3 +145,40 @@ func TestParseToolsRewritesBody(t *testing.T) {
 		t.Fatalf("body %q\nwant %q", tools[0].Body, want)
 	}
 }
+
+// Resolve treats the HUD as premultiplied, so a Background whose alpha fades
+// must fade its color too; a color left on shows as a box when the alpha is
+// 0 (seen on the flip badges of Goggles and Race with no flip).
+func TestBuiltinBackgroundsPremultiplied(t *testing.T) {
+	for _, d := range Builtins() {
+		src, err := d.Render(Vars{Mono: "Menlo", Sans: "Helvetica", Path: "Polyline { Points = {} }", GLabel: "G"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		tools, err := parseTools(src)
+		if err != nil {
+			t.Fatalf("%s: %v", d.ID, err)
+		}
+		for _, tool := range tools {
+			if tool.Type != "Background" {
+				continue
+			}
+			byName := map[string]input{}
+			for _, in := range tool.Inputs {
+				byName[in.Name] = in
+			}
+			for _, corner := range []string{"TopLeft", "TopRight", "BottomLeft", "BottomRight"} {
+				alpha := byName[corner+"Alpha"].Expression
+				if alpha == "" {
+					continue
+				}
+				for _, c := range []string{"Red", "Green", "Blue"} {
+					black := strings.Contains(tool.Body, corner+c+" = Input { Value = 0, }")
+					if e := byName[corner+c].Expression; !black && !strings.Contains(e, "("+alpha+")") {
+						t.Errorf("%s %s: %s%s = %q does not fade with %s%s = %q", d.ID, tool.Name, corner, c, e, corner, "Alpha", alpha)
+					}
+				}
+			}
+		}
+	}
+}

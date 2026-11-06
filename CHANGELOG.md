@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+**Fixes**
+- DJI flight logs line up much better: the offset comes from ground speed and is fine-tuned by matching the video's roll with the aileron stick, instead of from height alone (which could be seconds off).
+- Logs whose time stamps lag or jump (seen on version 14 logs) no longer leave holes in sticks and battery: frame times come from the log's flight time counter.
+- A log that starts a few seconds after the video (the goggles started recording first) is now used.
+- A log that only lines up at the edge of the ±5 s search is no longer used with a wrong offset; the panel says why.
+- Goggles and Race no longer show an empty box where the flip badge goes, and their stick and battery backgrounds fade out cleanly when there's no data.
+
 ## 0.1.0 (2026-11-06)
 
 First release: GoPro and DJI Avata 2 footage in DaVinci Resolve (free and Studio) on macOS and Windows.
