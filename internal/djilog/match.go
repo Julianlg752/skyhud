@@ -30,8 +30,11 @@ type Result struct {
 
 const (
 	searchBefore = 3 * time.Hour // a log starts at most this long before the clip
+	lateStart    = 5.0           // s a log may start after the clip (the goggles record first)
 	maxOffset    = 5.0           // s
 	offsetStep   = 0.05          // s
+	refineWindow = 3.0           // s around the speed or height match where roll may move it
+	maxSpread    = 0.1           // s between frames that share one time stamp (OSD runs at 10 Hz)
 	sampleStep   = 0.1           // s
 	minCorr      = 0.8
 	stickCenter  = 1024.0
@@ -79,7 +82,7 @@ func FindAndAlign(folder string, video *telemetry.Track, opt Options) (Result, e
 		if err != nil || !sameAircraft(l.Aircraft, video.Device) {
 			continue
 		}
-		if l.Start.After(start.Add(5*time.Second)) || start.Sub(l.Start) > searchBefore {
+		if l.Start.After(start.Add(lateStart*time.Second)) || start.Sub(l.Start) > searchBefore {
 			continue
 		}
 		if l.End.After(l.Start) && l.End.Before(start) {
@@ -123,32 +126,43 @@ func tryLog(name string, raw []byte, l *Log, video *telemetry.Track, opt Options
 		return nil, ""
 	}
 	// Log times relative to the clip start.
-	var lt, lh []float64
-	for _, f := range frames {
-		if f.Time.IsZero() {
+	times := frameTimes(frames, start)
+	var lt, lh, ls []float64
+	for i, f := range frames {
+		if math.IsNaN(times[i]) {
 			continue
 		}
-		lt = append(lt, f.Time.Sub(start).Seconds())
+		lt = append(lt, times[i])
 		lh = append(lh, f.Height)
+		ls = append(ls, math.Hypot(f.XSpeed, f.YSpeed))
 	}
-	if len(lt) == 0 || lt[0] > 1 || lt[len(lt)-1] < video.Duration/2 {
+	if len(lt) == 0 || lt[0] > lateStart || lt[len(lt)-1] < video.Duration/2 {
 		return nil, "" // doesn't cover the clip
 	}
-	vh := video.Channels[telemetry.Height]
-	offset, corr := bestOffset(vh.T, column0(vh.V), lt, lh, video.Duration)
+	// Ground speed has sharper turns than height, and the video's height can
+	// drift against the log's, so speed sets the offset when both have it.
+	vc, lc := video.Channels[telemetry.Height], lh
+	if vs := video.Channels[telemetry.Speed]; len(vs.T) > 1 && varies(ls) {
+		vc, lc = vs, ls
+	}
+	offset, corr := bestOffset(vc.T, column0(vc.V), lt, lc, video.Duration)
 	if corr < minCorr {
 		return nil, fmt.Sprintf("flight log %s does not line up with the video (match %.2f)", name, corr)
 	}
+	if math.Abs(offset) > maxOffset-offsetStep/2 {
+		return nil, fmt.Sprintf("flight log %s could not be lined up: the best match is %.0f s off or more", name, maxOffset)
+	}
+	offset = refineByRoll(offset, video, frames, times, vc, lt, lc)
 	r := &Result{Offset: offset}
 	sticks := hasStickData(frames)
 	if !sticks {
 		r.Notes = append(r.Notes, "flight log has no stick positions (motion controller?)")
 	}
-	for _, f := range frames {
-		if f.Time.IsZero() {
+	for i, f := range frames {
+		if math.IsNaN(times[i]) {
 			continue
 		}
-		at := f.Time.Sub(start).Seconds() + offset
+		at := times[i] + offset
 		if at < -1 || at > video.Duration+1 {
 			continue
 		}
@@ -213,25 +227,149 @@ func bestOffset(vt, vh, lt, lh []float64, duration float64) (float64, float64) {
 	if len(vt) < 2 || len(lt) < 2 {
 		return 0, 0
 	}
-	var grid []float64
-	for at := 0.0; at <= duration; at += sampleStep {
-		grid = append(grid, at)
-	}
-	vs := make([]float64, len(grid))
-	for i, at := range grid {
-		vs[i] = interp(vt, vh, at)
-	}
+	grid := offsetGrid(duration)
+	vs := sample(vt, vh, grid, 0)
 	best, bestCorr := 0.0, -2.0
 	for o := -maxOffset; o <= maxOffset+1e-9; o += offsetStep {
-		ls := make([]float64, len(grid))
-		for i, at := range grid {
-			ls[i] = interp(lt, lh, at-o)
-		}
-		if c := corr(vs, ls); c > bestCorr {
+		if c := corr(vs, sample(lt, lh, grid, o)); c > bestCorr {
 			best, bestCorr = math.Round(o/offsetStep)*offsetStep, c
 		}
 	}
 	return best, bestCorr
+}
+
+// refineByRoll moves the offset found from speed or height (whose match can
+// be broad and sit a second or more off) to where the video's roll best
+// follows the aileron stick, within refineWindow of it. Without sticks or
+// orientation it returns the offset unchanged.
+func refineByRoll(offset float64, video *telemetry.Track, frames []Frame, times []float64, vc telemetry.Series, lt, lc []float64) float64 {
+	o := video.Channels[telemetry.Orientation]
+	if len(o.T) < 2 || !hasStickData(frames) {
+		return offset
+	}
+	var rt, rv []float64
+	step := max(1, len(o.T)/(int(video.Duration/sampleStep)*4+1)) // a few points per grid step is plenty
+	for i := 0; i < len(o.T); i += step {
+		if q := o.V[i]; len(q) >= 4 {
+			w, x, y, z := q[0], q[1], q[2], q[3]
+			rt = append(rt, o.T[i])
+			rv = append(rv, math.Atan2(2*(w*x+y*z), 1-2*(x*x+y*y)))
+		}
+	}
+	var at, av []float64
+	for i, f := range frames {
+		if !math.IsNaN(times[i]) && f.HasRC {
+			at = append(at, times[i])
+			av = append(av, stick(f.Aileron))
+		}
+	}
+	if len(rt) < 2 || len(at) < 2 {
+		return offset
+	}
+	grid := offsetGrid(video.Duration)
+	vs, rs := sample(vc.T, column0(vc.V), grid, 0), sample(rt, rv, grid, 0)
+	best, bestScore := offset, -4.0
+	for o := offset - refineWindow; o <= offset+refineWindow+1e-9; o += offsetStep {
+		// Roll and stick can be opposite in sign; the size of the match counts.
+		score := corr(vs, sample(lt, lc, grid, o)) + math.Abs(corr(rs, sample(at, av, grid, o)))
+		if score > bestScore {
+			best, bestScore = math.Round(o/offsetStep)*offsetStep, score
+		}
+	}
+	return best
+}
+
+// frameTimes returns each frame's time in seconds from start (NaN when it
+// has none). The OSD's flight time counter gives the steps between frames
+// when the log has it; the time stamps, which can lag by seconds and are
+// sometimes years off, only place it (their median). Without the counter,
+// a run of frames sharing one stamp is spread evenly up to the next stamp,
+// at most maxSpread apart.
+func frameTimes(frames []Frame, start time.Time) []float64 {
+	if out, ok := flyTimes(frames, start); ok {
+		return out
+	}
+	out := make([]float64, len(frames))
+	var run []int // frames sharing the current stamp
+	flush := func(next float64) {
+		if len(run) == 0 {
+			return
+		}
+		t0 := out[run[0]]
+		step := maxSpread
+		if !math.IsNaN(next) {
+			step = min(maxSpread, (next-t0)/float64(len(run)))
+		}
+		for j, i := range run {
+			out[i] = t0 + float64(j)*step
+		}
+		run = run[:0]
+	}
+	for i, f := range frames {
+		if f.Time.IsZero() {
+			out[i] = math.NaN()
+			continue
+		}
+		out[i] = f.Time.Sub(start).Seconds()
+		if len(run) > 0 && out[i] != out[run[0]] {
+			flush(out[i])
+		}
+		run = append(run, i)
+	}
+	flush(math.NaN())
+	return out
+}
+
+// flyTimes places the flight time counter on the clip's clock; ok is false
+// when a frame lacks the counter or it runs backwards.
+func flyTimes(frames []Frame, start time.Time) ([]float64, bool) {
+	var d []float64
+	for i, f := range frames {
+		if f.FlyTime < 0 || i > 0 && f.FlyTime < frames[i-1].FlyTime {
+			return nil, false
+		}
+		if !f.Time.IsZero() {
+			d = append(d, f.Time.Sub(start).Seconds()-f.FlyTime)
+		}
+	}
+	if len(d) == 0 {
+		return nil, false
+	}
+	sort.Float64s(d)
+	c := d[len(d)/2]
+	out := make([]float64, len(frames))
+	for i, f := range frames {
+		out[i] = f.FlyTime + c
+	}
+	return out, true
+}
+
+// offsetGrid is the clip's times the matches are compared at.
+func offsetGrid(duration float64) []float64 {
+	var grid []float64
+	for at := 0.0; at <= duration; at += sampleStep {
+		grid = append(grid, at)
+	}
+	return grid
+}
+
+// sample returns v at each grid time moved back by o.
+func sample(t, v, grid []float64, o float64) []float64 {
+	out := make([]float64, len(grid))
+	for i, at := range grid {
+		out[i] = interp(t, v, at-o)
+	}
+	return out
+}
+
+// varies reports whether v holds more than one value.
+func varies(v []float64) bool {
+	for _, x := range v {
+		if x != v[0] {
+			return true
+		}
+	}
+	return false
 }
 
 func interp(t, v []float64, at float64) float64 {

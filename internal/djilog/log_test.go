@@ -80,6 +80,48 @@ func osd(height, vx, vy float64) []byte {
 	return b
 }
 
+// osdFly is a full-length OSD record with the flight time counter (0.1 s
+// steps) at byte 42, as in version 13+ logs.
+func osdFly(height, vx, vy float64, tenths uint16) []byte {
+	b := make([]byte, 60)
+	copy(b, osd(height, vx, vy))
+	binary.LittleEndian.PutUint16(b[42:], tenths)
+	return b
+}
+
+func TestFlyTime(t *testing.T) {
+	var f bytes.Buffer
+	pre := make([]byte, 100)
+	pre[10] = 12
+	f.Write(pre)
+	details := make([]byte, 436)
+	binary.LittleEndian.PutUint64(details[91:], uint64(t0.UnixMilli()))
+	details[271] = 152
+	copy(details[280:312], "DJI Avata 2")
+	f.Write(details)
+	e := &encoder{version: 12}
+	for i := range 5 {
+		e.record(1, osdFly(1, 0, 0, uint16(70+i)))
+		e.record(5, custom(t0))
+	}
+	f.Write(e.buf.Bytes())
+	l, err := Open(f.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+	fs, err := l.Frames(nil)
+	if err != nil || len(fs) != 4 {
+		t.Fatalf("%d frames, err %v", len(fs), err)
+	}
+	if math.Abs(fs[2].FlyTime-7.2) > 1e-9 {
+		t.Fatalf("fly time %v, want 7.2", fs[2].FlyTime)
+	}
+	short, _ := Open(v12Log(t, "DJI Avata 2", 5))
+	if fs, _ := short.Frames(nil); fs[0].FlyTime != -1 {
+		t.Fatalf("short OSD record: fly time %v, want -1", fs[0].FlyTime)
+	}
+}
+
 func rc(aileron, elevator, throttle, rudder uint16) []byte {
 	b := make([]byte, 13)
 	for i, v := range []uint16{aileron, elevator, throttle, rudder, 1024} {

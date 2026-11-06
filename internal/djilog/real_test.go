@@ -42,6 +42,7 @@ func TestRealLogs(t *testing.T) {
 					} `json:"custom"`
 					OSD struct {
 						Height, XSpeed, YSpeed float64
+						FlyTime                float64 `json:"flyTime"`
 					} `json:"osd"`
 					RC struct {
 						Aileron, Elevator, Throttle, Rudder int
@@ -102,7 +103,8 @@ func TestRealLogs(t *testing.T) {
 				bad := (wt.Year() > 1970 && !g.Time.Equal(wt)) ||
 					math.Abs(g.Height-w.OSD.Height) > 0.01 || math.Abs(g.XSpeed-w.OSD.XSpeed) > 0.01 || math.Abs(g.YSpeed-w.OSD.YSpeed) > 0.01 ||
 					g.Aileron != w.RC.Aileron || g.Elevator != w.RC.Elevator || g.Throttle != w.RC.Throttle || g.Rudder != w.RC.Rudder ||
-					g.Battery != w.Battery.ChargeLevel || math.Abs(g.Volts-w.Battery.Voltage) > 0.01
+					g.Battery != w.Battery.ChargeLevel || math.Abs(g.Volts-w.Battery.Voltage) > 0.01 ||
+					g.FlyTime >= 0 && math.Abs(g.FlyTime-w.OSD.FlyTime) > 0.01
 				if bad {
 					t.Fatalf("frame %d:\n got %+v\nwant %+v", i, g, w)
 				}

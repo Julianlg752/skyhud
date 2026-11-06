@@ -44,6 +44,7 @@ type Log struct {
 type Frame struct {
 	Time                                time.Time // UTC
 	Height, XSpeed, YSpeed, ZSpeed      float64   // m above takeoff, m/s
+	FlyTime                             float64   // s, the OSD's 0.1 s counter; -1 when the record is too short
 	Aileron, Elevator, Throttle, Rudder int       // stick positions, about 364..1684
 	Battery                             int       // percent
 	Volts                               float64
@@ -431,6 +432,10 @@ func (l *Log) Frames(keychains [][]KeyPoint) ([]Frame, error) {
 			f.XSpeed = float64(int16(binary.LittleEndian.Uint16(d[18:]))) / 10
 			f.YSpeed = float64(int16(binary.LittleEndian.Uint16(d[20:]))) / 10
 			f.ZSpeed = float64(int16(binary.LittleEndian.Uint16(d[22:]))) / 10
+			f.FlyTime = -1
+			if len(d) >= 44 {
+				f.FlyTime = float64(binary.LittleEndian.Uint16(d[42:])) / 10
+			}
 			osds++
 		case recRC, recRCDisplay:
 			off := 0
