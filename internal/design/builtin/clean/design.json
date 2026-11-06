@@ -1,0 +1,42 @@
+{
+  "name": "Clean",
+  "note": "Small and quiet, for cinematic shots",
+  "font": "sans",
+  "colors": {
+    "main": [
+      1,
+      1,
+      1
+    ]
+  },
+  "pieces": {
+    "speed": {
+      "x": 0.12,
+      "y": 0.1
+    },
+    "height": {
+      "x": 0.34,
+      "y": 0.08
+    },
+    "gforce": {
+      "x": 0.5,
+      "y": 0.08
+    },
+    "path": {
+      "x": 0.9,
+      "y": 0.82
+    },
+    "sticks": {
+      "x": 0.7,
+      "y": 0.08
+    },
+    "battery": {
+      "x": 0.9,
+      "y": 0.08
+    },
+    "flip": {
+      "x": 0.5,
+      "y": 0.92
+    }
+  }
+}

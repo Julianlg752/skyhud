@@ -1,0 +1,52 @@
+{
+  "name": "Race",
+  "note": "Loud gauges for action edits",
+  "font": "sans",
+  "colors": {
+    "main": [
+      1,
+      1,
+      1
+    ],
+    "accent": [
+      1,
+      0.18,
+      0.12
+    ],
+    "accent2": [
+      1,
+      0.69,
+      0.13
+    ]
+  },
+  "pieces": {
+    "speed": {
+      "x": 0.2,
+      "y": 0.14
+    },
+    "height": {
+      "x": 0.8,
+      "y": 0.9
+    },
+    "gforce": {
+      "x": 0.58,
+      "y": 0.08
+    },
+    "path": {
+      "x": 0.9,
+      "y": 0.66
+    },
+    "sticks": {
+      "x": 0.85,
+      "y": 0.1
+    },
+    "battery": {
+      "x": 0.17,
+      "y": 0.92
+    },
+    "flip": {
+      "x": 0.5,
+      "y": 0.82
+    }
+  }
+}

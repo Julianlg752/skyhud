@@ -1,0 +1,19 @@
+{
+  "name": "Goggles",
+  "note": "Feels like the pilot's view",
+  "font": "mono",
+  "colors": {
+    "main": [1, 1, 1],
+    "outline": [0, 0, 0]
+  },
+  "pieces": {
+    "speed": {"x": 0.11, "y": 0.92},
+    "height": {"x": 0.11, "y": 0.80},
+    "gforce": {"x": 0.11, "y": 0.68},
+    "horizon": {"x": 0.5, "y": 0.5},
+    "path": {"x": 0.9, "y": 0.82},
+    "sticks": {"x": 0.5, "y": 0.11},
+    "battery": {"x": 0.86, "y": 0.08},
+    "flip": {"x": 0.5, "y": 0.9}
+  }
+}

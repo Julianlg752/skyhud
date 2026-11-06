@@ -1,0 +1,46 @@
+{
+  "name": "Fighter jet",
+  "note": "Green cockpit with a live horizon",
+  "font": "mono",
+  "colors": {
+    "main": [
+      0.365,
+      1,
+      0.56
+    ]
+  },
+  "pieces": {
+    "speed": {
+      "x": 0.11,
+      "y": 0.5
+    },
+    "height": {
+      "x": 0.89,
+      "y": 0.5
+    },
+    "gforce": {
+      "x": 0.11,
+      "y": 0.12
+    },
+    "horizon": {
+      "x": 0.5,
+      "y": 0.5
+    },
+    "path": {
+      "x": 0.89,
+      "y": 0.85
+    },
+    "sticks": {
+      "x": 0.5,
+      "y": 0.09
+    },
+    "battery": {
+      "x": 0.89,
+      "y": 0.1
+    },
+    "flip": {
+      "x": 0.5,
+      "y": 0.9
+    }
+  }
+}

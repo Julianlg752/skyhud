@@ -1,0 +1,40 @@
+# Private flight data: never commit real footage, logs or keys
+*.mp4
+*.MP4
+*.mov
+*.MOV
+*.lrv
+*.LRV
+*.thm
+*.THM
+*.bbl
+*.BBL
+*.bfl
+*.BFL
+*.dat
+*.DAT
+*.insv
+*.INSV
+DJIFlightRecord_*.txt
+*.decoded.json
+samples/
+dji_key
+*.key
+.env*
+
+# Private notes and drafts
+CLAUDE.local.md
+linkedin/
+
+# Tool workspaces
+.superpowers/
+
+# Build output
+/skyhud
+/skyhud.exe
+dist/
+
+# Planning notes, research and throwaway spikes stay on this computer
+docs/superpowers/
+docs/research/
+spikes/
