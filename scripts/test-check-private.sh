@@ -73,6 +73,15 @@ else
 	echo "note: gitleaks not installed, its check was not tested"
 fi
 
+reset_repo; mkdir -p "$TMP/repo/site/media"; dd if=/dev/zero of="$TMP/repo/site/media/demo.mp4" bs=1048576 count=12 2>/dev/null; (cd "$TMP/repo" && git add -f site/media/demo.mp4)
+expect 0 "approved public video under site/media allowed"
+
+reset_repo; mkdir -p "$TMP/repo/site/media"; dd if=/dev/zero of="$TMP/repo/site/media/huge.mp4" bs=1048576 count=26 2>/dev/null; (cd "$TMP/repo" && git add -f site/media/huge.mp4)
+expect 1 "site/media file over 25 MB blocked"
+
+reset_repo; mkdir -p "$TMP/repo/site"; echo x > "$TMP/repo/site/clip.MP4"; (cd "$TMP/repo" && git add -f site/clip.MP4)
+expect 1 "video outside site/media still blocked"
+
 reset_repo; echo "SkyHUD" > "$TMP/repo/README.md"; (cd "$TMP/repo" && git add README.md)
 expect 0 "normal file allowed"
 

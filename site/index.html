@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyHUD: your flight data as an animated HUD in DaVinci Resolve</title>
+<meta name="description" content="Free, open-source DaVinci Resolve plugin for FPV pilots. Reads the telemetry already inside your GoPro and DJI Avata 2 videos and turns it into an editable, animated HUD.">
+<meta property="og:title" content="SkyHUD for DaVinci Resolve">
+<meta property="og:description" content="Put your goggles' HUD back in the edit. Free and open source, for GoPro and DJI Avata 2 footage.">
+<meta property="og:image" content="https://julianlg752.github.io/skyhud/media/walkthrough-poster.jpg">
+<meta property="og:type" content="website">
+<style>
+:root { --bg:#0d0f12; --panel:#151820; --rule:#1f232a; --line:#2a2f39; --ink:#e8eaed; --muted:#9aa0a8; --soft:#b8bdc5; --accent:#ff7a1a; --accent-ink:#14100b; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif; }
+a { color:inherit; }
+.wrap { max-width:1080px; margin:0 auto; padding:0 24px; }
+header { border-bottom:1px solid var(--rule); }
+header .wrap { display:flex; justify-content:space-between; align-items:center; height:60px; }
+.logo { font-weight:700; font-size:19px; text-decoration:none; letter-spacing:.01em; }
+.logo span { color:var(--accent); }
+nav a { color:var(--muted); text-decoration:none; margin-left:20px; font-size:15px; }
+nav a:hover { color:var(--ink); }
+.video { margin:28px auto 0; max-width:1080px; padding:0 24px; }
+.video video { display:block; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; }
+.video p { color:var(--muted); font-size:14px; margin:8px 2px 0; }
+.hero { display:grid; grid-template-columns:1fr 1.15fr; gap:40px; align-items:center; padding:48px 0 40px; }
+h1 { font-size:clamp(30px,4vw,44px); line-height:1.1; margin:0 0 14px; }
+.lede { color:var(--soft); font-size:18px; margin:0 0 24px; }
+.ctas { display:flex; gap:12px; flex-wrap:wrap; }
+.btn { display:inline-block; padding:12px 18px; border-radius:9px; text-decoration:none; font-weight:600; border:1px solid var(--line); }
+.btn:hover { border-color:#4a505a; }
+.btn.primary { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; }
+.btn.primary:hover { filter:brightness(1.08); }
+.fine { color:var(--muted); font-size:14px; margin-top:12px; }
+.fine a { color:var(--soft); }
+.switch img { display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; border-radius:10px; background:#000; }
+.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.tabs button { font:inherit; font-size:14px; cursor:pointer; padding:6px 13px; border-radius:20px; background:var(--panel); color:var(--soft); border:1px solid var(--line); }
+.tabs button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; }
+.tabs + p { color:var(--muted); font-size:14px; margin:8px 2px 0; min-height:1.5em; }
+section { border-top:1px solid var(--rule); padding:36px 0; }
+h2 { font-size:22px; margin:0 0 16px; }
+.gear { display:flex; gap:10px; flex-wrap:wrap; list-style:none; margin:0; padding:0; }
+.gear li { background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-size:15px; }
+.gear li.next { color:var(--muted); border-style:dashed; }
+.steps { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; list-style:none; margin:0; padding:0; counter-reset:s; }
+.steps li { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; color:var(--soft); }
+.steps b { display:block; color:var(--ink); margin-bottom:4px; }
+.follow { display:flex; justify-content:space-between; align-items:center; gap:20px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px; }
+.follow p { margin:4px 0 0; color:var(--soft); }
+footer { border-top:1px solid var(--rule); color:var(--muted); font-size:14px; padding:24px 0 40px; }
+footer .wrap { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+footer a { color:var(--soft); margin-left:16px; }
+footer a:first-child { margin-left:0; }
+@media (max-width:820px) {
+  .hero { grid-template-columns:1fr; gap:28px; padding-top:32px; }
+  .steps { grid-template-columns:1fr; }
+  .follow { flex-direction:column; align-items:flex-start; }
+  nav a:not(.star) { display:none; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="logo" href="#">Sky<span>HUD</span></a>
+    <nav aria-label="Main">
+      <a href="#download">Download</a>
+      <a href="#designs">Designs</a>
+      <a href="https://github.com/Julianlg752/skyhud/blob/main/docs/usage.md">Docs</a>
+      <a class="star" href="https://github.com/Julianlg752/skyhud">GitHub ★</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="video">
+    <video controls playsinline preload="none" poster="media/walkthrough-poster.jpg" aria-label="SkyHUD walkthrough, 80 seconds">
+      <source src="media/skyhud-walkthrough.mp4" type="video/mp4">
+    </video>
+    <p>80-second walkthrough: install, the panel, the four designs, Avata 2 and GoPro.</p>
+  </div>
+
+  <div class="wrap">
+    <div class="hero" id="download">
+      <div>
+        <h1>Put your goggles' HUD back in the edit</h1>
+        <p class="lede">SkyHUD reads the flight data already inside your GoPro and DJI Avata 2 videos and turns it into an animated HUD in DaVinci Resolve: speed, height, horizon, flips, g-force, flight path and sticks. Editable, on its own track, never burned in.</p>
+        <div class="ctas">
+          <a class="btn primary" id="dl" href="https://github.com/Julianlg752/skyhud/releases/latest">Download SkyHUD</a>
+          <a class="btn" href="https://github.com/Julianlg752/skyhud">★ Star on GitHub</a>
+        </div>
+        <p class="fine" id="dl-more">Free and open source · macOS and Windows · Resolve free and Studio · <a href="https://github.com/Julianlg752/skyhud/releases/latest">All downloads</a></p>
+      </div>
+      <div class="switch" id="designs">
+        <img id="design-img" src="media/design-race.jpg" alt="The Race design over an Avata 2 flight" width="1280" height="720">
+        <div class="tabs" role="group" aria-label="Designs">
+          <button type="button" data-d="goggles" aria-pressed="false">Goggles</button>
+          <button type="button" data-d="race" aria-pressed="true">Race</button>
+          <button type="button" data-d="fighter" aria-pressed="false">Fighter jet</button>
+          <button type="button" data-d="clean" aria-pressed="false">Clean</button>
+        </div>
+        <p id="design-note">Race: loud gauges for action edits.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section aria-labelledby="gear-h">
+      <h2 id="gear-h">Works with</h2>
+      <ul class="gear">
+        <li>GoPro with GPS (tested on HERO10 Black)</li>
+        <li>Gyroflow-stabilized GoPro clips</li>
+        <li>DJI Avata 2</li>
+        <li>Avata 2 flight logs for sticks and battery</li>
+        <li class="next">Betaflight blackbox: coming next</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="steps-h">
+      <h2 id="steps-h">Three steps</h2>
+      <ol class="steps">
+        <li><b>1. Install</b>Download the zip for your computer, run the install script inside, restart Resolve.</li>
+        <li><b>2. Edit and grade</b>Cut and grade your flight as usual. The HUD comes last, so the grade never touches it.</li>
+        <li><b>3. Add the HUD</b>Workspace › Scripts › SkyHUD, pick a design, press Add HUD to all shots.</li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="follow-h">
+      <div class="follow">
+        <div>
+          <h2 id="follow-h" style="margin:0">Early release, built in the open</h2>
+          <p>Star the repo and watch its releases to hear about new designs and Betaflight support. Bugs and ideas are welcome.</p>
+        </div>
+        <div class="ctas">
+          <a class="btn" href="https://github.com/Julianlg752/skyhud">★ Star</a>
+          <a class="btn" href="https://github.com/Julianlg752/skyhud/releases">Watch releases</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>SkyHUD is MIT licensed. Made by an FPV pilot, <a href="https://julianlg752.github.io/" style="margin:0">Julian Linares</a>.</span>
+    <span>
+      <a href="https://github.com/Julianlg752/skyhud/blob/main/docs/install.md">Install guide</a>
+      <a href="https://github.com/Julianlg752/skyhud/blob/main/docs/designs.md">Make your own design</a>
+      <a href="https://github.com/Julianlg752/skyhud/issues/new">Report a bug</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+// Current release. Update on every release (docs/release-checklist.md).
+var VERSION = "0.1.1";
+(function () {
+  var base = "https://github.com/Julianlg752/skyhud/releases/download/v" + VERSION + "/SkyHUD-" + VERSION + "-";
+  var all = "https://github.com/Julianlg752/skyhud/releases/latest";
+  var ua = navigator.userAgent;
+  var dl = document.getElementById("dl"), more = document.getElementById("dl-more");
+  var note = " · Resolve free and Studio · <a href=\"" + all + "\">All downloads</a>";
+  if (/Windows/.test(ua)) {
+    dl.href = base + "Windows-x64.zip";
+    dl.textContent = "Download for Windows (" + VERSION + ")";
+    more.innerHTML = "Free and open source · Windows 10/11, 64-bit" + note;
+  } else if (/Macintosh|Mac OS X/.test(ua) && !/iPhone|iPad/.test(ua)) {
+    dl.href = base + "macOS-arm64.zip";
+    dl.textContent = "Download for Mac (" + VERSION + ")";
+    more.innerHTML = "Free and open source · For Apple silicon. <a href=\"" + base + "macOS-x64.zip\">Intel Mac?</a>" + note;
+  }
+
+  var notes = {
+    goggles: "Goggles: feels like the pilot's view.",
+    race: "Race: loud gauges for action edits.",
+    fighter: "Fighter jet: green cockpit with a live horizon.",
+    clean: "Clean: small and quiet, for cinematic shots."
+  };
+  var names = { goggles: "Goggles", race: "Race", fighter: "Fighter jet", clean: "Clean" };
+  var img = document.getElementById("design-img"), text = document.getElementById("design-note");
+  var buttons = document.querySelectorAll(".tabs button");
+  for (var i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener("click", function () {
+      var d = this.getAttribute("data-d");
+      img.src = "media/design-" + d + ".jpg";
+      img.alt = "The " + names[d] + " design over a real flight";
+      text.textContent = notes[d];
+      for (var j = 0; j < buttons.length; j++) buttons[j].setAttribute("aria-pressed", buttons[j] === this ? "true" : "false");
+    });
+  }
+})();
+</script>
+</body>
+</html>

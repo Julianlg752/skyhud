@@ -38,3 +38,6 @@ dist/
 docs/superpowers/
 docs/research/
 spikes/
+
+# Approved public media for the landing page
+!site/media/*.mp4

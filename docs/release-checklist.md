@@ -26,3 +26,4 @@ Publishing is Julian's call. Nothing here pushes or publishes on its own.
 - [ ] Release notes: the CHANGELOG section, the three zips, links to docs/install.md and docs/usage.md, the unsigned-app note.
 - [ ] Sample stills or videos in the release only from footage that is fine to publish (no home, no faces, no locations).
 - [ ] Push the tag and publish the release (Julian).
+- [ ] Landing page: set `VERSION` near the bottom of `site/index.html` to the new version and push to main (the Pages workflow republishes it). The Download button links straight to that version's zips.

@@ -13,6 +13,7 @@ if [ "${1:-}" = "--install" ]; then
 fi
 
 MAX_BYTES=5242880
+MAX_SITE_MEDIA_BYTES=26214400
 blocked=0
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -36,6 +37,15 @@ IFS='
 '
 for f in $files; do
 	lower=$(printf '%s' "$f" | tr '[:upper:]' '[:lower:]')
+	# site/media holds media Julian approved for the public landing page.
+	case $lower in
+	site/media/*)
+		size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
+		if [ "$size" -gt "$MAX_SITE_MEDIA_BYTES" ]; then
+			echo "blocked: $f is larger than 25 MB"; blocked=1
+		fi
+		continue;;
+	esac
 	case $lower in
 	*.mp4|*.mov|*.lrv|*.thm|*.bbl|*.bfl|*.dat|*.insv|*djiflightrecord_*.txt|*.decoded.json|*dji_key|*.key)
 		echo "blocked: $f looks like private flight data or a key"; blocked=1; continue;;
