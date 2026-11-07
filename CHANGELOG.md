@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 (2026-11-06)
 
 **Fixes**
 - DJI flight logs line up much better: the offset comes from ground speed and is fine-tuned by matching the video's roll with the aileron stick, instead of from height alone (which could be seconds off).
