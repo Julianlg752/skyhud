@@ -2,6 +2,9 @@
 # Blocks private flight data, the DJI key, private words, secrets and a
 # personal commit email from being committed.
 # Install as a pre-commit hook: sh scripts/check-private.sh --install
+# In CI: sh scripts/check-private.sh --range BASE HEAD checks every commit
+# of a pull request (the email, private words and DJI key checks need files
+# that only exist on the owner's computer, so they are skipped there).
 set -u
 
 if [ "${1:-}" = "--install" ]; then
@@ -12,6 +15,12 @@ if [ "${1:-}" = "--install" ]; then
 	exit 0
 fi
 
+range=""
+if [ "${1:-}" = "--range" ]; then
+	[ $# -eq 3 ] || { echo "usage: sh scripts/check-private.sh --range BASE HEAD"; exit 2; }
+	range="$2..$3"
+fi
+
 MAX_BYTES=5242880
 MAX_SITE_MEDIA_BYTES=26214400
 blocked=0
@@ -19,11 +28,14 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 # Commits are public: only a GitHub noreply address may sign them.
-email=$(git var GIT_AUTHOR_IDENT 2>/dev/null | sed -n 's/.*<\(.*\)>.*/\1/p')
-case $email in
-*@users.noreply.github.com) ;;
-*) echo "blocked: commit email $email is not your GitHub noreply address (git config user.email <id>+<user>@users.noreply.github.com)"; blocked=1;;
-esac
+# (Not checked for pull requests: contributors choose their own address.)
+if [ -z "$range" ]; then
+	email=$(git var GIT_AUTHOR_IDENT 2>/dev/null | sed -n 's/.*<\(.*\)>.*/\1/p')
+	case $email in
+	*@users.noreply.github.com) ;;
+	*) echo "blocked: commit email $email is not your GitHub noreply address (git config user.email <id>+<user>@users.noreply.github.com)"; blocked=1;;
+	esac
+fi
 
 # Private words (places, names, serials), one per line; # starts a comment.
 words_file=${SKYHUD_PRIVATE_WORDS:-$HOME/.config/open-hud/private-words}
@@ -31,11 +43,9 @@ words="$tmp/words"
 : > "$words"
 [ -s "$words_file" ] && tr -d '\r' < "$words_file" | grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' > "$words"
 
-# Raw names (no quoting of non-ASCII), including renames and type changes.
-files=$(git -c core.quotePath=false diff --cached --name-only -z --diff-filter=ACMRT | tr '\000' '\n')
-IFS='
-'
-for f in $files; do
+# check_file <path> <blob>: <blob> is ":<path>" (staged) or "<commit>:<path>".
+check_file() {
+	f=$1
 	lower=$(printf '%s' "$f" | tr '[:upper:]' '[:lower:]')
 	# site/media holds media Julian approved for the public landing page:
 	# mp4 videos and a bigger size limit are allowed there, every other check still runs.
@@ -49,38 +59,61 @@ for f in $files; do
 	esac
 	case $lower in
 	*.mp4|*.mov|*.lrv|*.thm|*.bbl|*.bfl|*.dat|*.insv|*djiflightrecord_*.txt|*.decoded.json|*dji_key|*.key)
-		echo "blocked: $f looks like private flight data or a key"; blocked=1; continue;;
+		echo "blocked: $f looks like private flight data or a key"; blocked=1; return;;
 	esac
 	if [ -s "$words" ]; then
-		w=$( { printf '%s\n' "$f"; git cat-file blob ":$f" 2>/dev/null; } | grep -a -i -o -F -f "$words" | head -n 1)
+		w=$( { printf '%s\n' "$f"; git cat-file blob "$2" 2>/dev/null; } | grep -a -i -o -F -f "$words" | head -n 1)
 		if [ -n "$w" ]; then
 			echo "blocked: $f contains the private word \"$w\""; blocked=1
 		fi
 	fi
-	size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
+	size=$(git cat-file -s "$2" 2>/dev/null || echo 0)
 	if [ "$size" -gt "$max" ]; then
 		echo "blocked: $f is larger than $((max / 1048576)) MB"; blocked=1
 	fi
-done
+}
+
+# Raw names (no quoting of non-ASCII), including renames and type changes.
+IFS='
+'
+if [ -z "$range" ]; then
+	for f in $(git -c core.quotePath=false diff --cached --name-only -z --diff-filter=ACMRT | tr '\000' '\n'); do
+		check_file "$f" ":$f"
+	done
+else
+	# Every commit, so a file added and removed again is still caught.
+	for c in $(git rev-list --reverse "$range"); do
+		for f in $(git -c core.quotePath=false diff-tree --root --no-commit-id --name-only -r -z --diff-filter=ACMRT "$c" | tr '\000' '\n'); do
+			check_file "$f" "$c:$f"
+		done
+	done
+fi
 unset IFS
 
 key_file=${SKYHUD_KEY_FILE:-$HOME/.config/open-hud/dji_key}
 if [ -s "$key_file" ]; then
 	pattern="$tmp/key"
 	tr -d ' \t\r\n' < "$key_file" > "$pattern"
-	if [ -s "$pattern" ] && git diff --cached --text -U0 | grep -a -F -i -q -f "$pattern"; then
-		echo "blocked: a DJI key was found in staged changes"; blocked=1
+	if [ -n "$range" ]; then changes() { git log -p --text -U0 "$range"; }; else changes() { git diff --cached --text -U0; }; fi
+	if [ -s "$pattern" ] && changes | grep -a -F -i -q -f "$pattern"; then
+		echo "blocked: a DJI key was found in the changes"; blocked=1
 	fi
 fi
 
 # Secrets of any kind (tokens, private keys...), when gitleaks is installed.
 if command -v gitleaks >/dev/null 2>&1; then
-	if ! gitleaks git --pre-commit --staged --no-banner --redact --log-level error . >/dev/null 2>&1; then
+	if [ -n "$range" ]; then
+		if ! gitleaks git --log-opts="$range" --no-banner --redact --log-level error . >/dev/null 2>&1; then
+			echo "blocked: gitleaks found a secret (see: gitleaks git --log-opts=$range --redact -v)"; blocked=1
+		fi
+	elif ! gitleaks git --pre-commit --staged --no-banner --redact --log-level error . >/dev/null 2>&1; then
 		echo "blocked: gitleaks found a secret in staged changes (see: gitleaks git --pre-commit --staged --redact -v)"; blocked=1
 	fi
+elif [ -n "$range" ]; then
+	echo "blocked: gitleaks is not installed, so secrets cannot be checked"; blocked=1
 else
 	echo "note: gitleaks is not installed, so secrets other than the DJI key are not checked"
 fi
 
-[ $blocked -eq 0 ] || echo "commit stopped by scripts/check-private.sh"
+[ $blocked -eq 0 ] || echo "stopped by scripts/check-private.sh"
 exit $blocked

@@ -1,0 +1,12 @@
+# Weekly pull requests when a GitHub Action or Go module we use gets an update.
+# They go through the same checks and review as any other change.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly

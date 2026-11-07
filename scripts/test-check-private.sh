@@ -97,5 +97,48 @@ expect 1 "private word inside a site/media file blocked"
 reset_repo; echo "SkyHUD" > "$TMP/repo/README.md"; (cd "$TMP/repo" && git add README.md)
 expect 0 "normal file allowed"
 
+# --range BASE HEAD checks every commit of a pull request (CI), without the local-only lists.
+# range_repo makes a base commit; commit <file> <content> adds one commit on top.
+range_repo() {
+	reset_repo; (cd "$TMP/repo" && echo base > README.md && git add README.md && git commit -qm base && git tag base)
+}
+commit() {
+	mkdir -p "$TMP/repo/$(dirname "$1")"; printf '%s\n' "$2" > "$TMP/repo/$1"; (cd "$TMP/repo" && git add -f "$1" && git commit -qm "add $1")
+}
+expect_range() {
+	want=$1; desc=$2
+	out=$(cd "$TMP/repo" && SKYHUD_KEY_FILE=/nonexistent SKYHUD_PRIVATE_WORDS=/nonexistent sh "$CHECK" --range base HEAD 2>&1)
+	got=$?
+	if [ "$got" -ne "$want" ]; then
+		echo "FAIL: $desc (exit $got, want $want): $out"; fail=1
+	fi
+	LAST_OUT=$out
+}
+
+range_repo; commit docs/a.md "hello"; commit internal/b.go "package b"
+expect_range 0 "range: normal commits allowed"
+
+range_repo; commit clip.MP4 x; (cd "$TMP/repo" && git rm -q clip.MP4 && git commit -qm "remove it again")
+expect_range 1 "range: video added in one commit and removed in the next blocked"
+case $LAST_OUT in *clip.MP4*) ;; *) echo "FAIL: range message should name clip.MP4"; fail=1;; esac
+
+range_repo; commit "logs/DJIFlightRecord_2025-06-01_[10-30-00].txt" x
+expect_range 1 "range: flight record blocked"
+
+range_repo; dd if=/dev/zero of="$TMP/repo/big.bin" bs=1048576 count=6 2>/dev/null; (cd "$TMP/repo" && git add big.bin && git commit -qm big)
+expect_range 1 "range: file over 5 MB blocked"
+
+range_repo; commit site/media/demo.mp4 x
+expect_range 0 "range: video under site/media allowed"
+
+range_repo; (cd "$TMP/repo" && git config user.email someone@example.com); commit docs/c.md "hi"
+expect_range 0 "range: contributors may use any email"
+
+if command -v gitleaks >/dev/null 2>&1; then
+	range_repo; commit config.txt "token = \"$tok\""
+	expect_range 1 "range: token found by gitleaks blocked"
+	case $LAST_OUT in *"$tok"*) echo "FAIL: range output must not contain the token"; fail=1;; esac
+fi
+
 [ $fail -eq 0 ] && echo "all checks passed"
 exit $fail

@@ -50,4 +50,4 @@ go build -o skyhud ./cmd/skyhud
 sh scripts/release.sh 0.1.0   # release zips in dist/
 ```
 
-See [CHANGELOG.md](CHANGELOG.md) for what changed. License: MIT.
+See [CHANGELOG.md](CHANGELOG.md) for what changed. Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md); security problems go through [SECURITY.md](SECURITY.md). License: MIT.

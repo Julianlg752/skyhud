@@ -29,3 +29,4 @@ Every commit and push is public and stays public. Be extra careful:
 - Private words (places, names, serials) go in `~/.config/open-hud/private-words`, one per line, outside the repo; the check refuses commits that contain them.
 - Planning notes, research and spikes stay out of git (`docs/superpowers/`, `docs/research/`, `spikes/` are ignored).
 - Never push, force-push, retag or rewrite published history without the owner's OK.
+- `main` is protected: every change goes through a pull request with green checks (`.github/workflows/checks.yml`); the owner may merge his own without a review, merged by rebase. Others need his approval.
