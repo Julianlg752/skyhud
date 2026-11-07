@@ -132,7 +132,7 @@ footer a:first-child { margin-left:0; }
       <div class="follow">
         <div>
           <h2 id="follow-h" style="margin:0">Early release, built in the open</h2>
-          <p>Star the repo and watch its releases to hear about new designs and Betaflight support. Bugs and ideas are welcome.</p>
+          <p>Tested so far on Resolve Studio 21 on macOS; checks on Windows and free Resolve are in progress. Star the repo and watch its releases to hear about new designs and Betaflight support. Bugs and ideas are welcome.</p>
         </div>
         <div class="ctas">
           <a class="btn" href="https://github.com/Julianlg752/skyhud">★ Star</a>
@@ -166,7 +166,7 @@ var VERSION = "0.1.1";
   if (/Windows/.test(ua)) {
     dl.href = base + "Windows-x64.zip";
     dl.textContent = "Download for Windows (" + VERSION + ")";
-    more.innerHTML = "Free and open source · Windows 10/11, 64-bit" + note;
+    more.innerHTML = "Free and open source · Windows 10/11, 64-bit (still being tested)" + note;
   } else if (/Macintosh|Mac OS X/.test(ua) && !/iPhone|iPad/.test(ua)) {
     dl.href = base + "macOS-arm64.zip";
     dl.textContent = "Download for Mac (" + VERSION + ")";

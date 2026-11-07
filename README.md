@@ -2,6 +2,10 @@
 
 A DaVinci Resolve plugin that turns the flight data hidden in your drone and action camera files into an animated, editable HUD: speed, height, flight path, horizon, flips, g-force, sticks and battery.
 
+[![The Race design over a DJI Avata 2 flight](site/media/design-race.jpg)](https://julianlg752.github.io/skyhud/)
+
+**[Watch the 80-second walkthrough](https://julianlg752.github.io/skyhud/)** on the SkyHUD page.
+
 Most pilots post their goggles' OSD as it is. SkyHUD lets you edit and grade your footage first, then add a polished HUD on its own track, in one of four designs or your own. The grade never touches the HUD, and the HUD is never burned into the video: you can move, resize, restyle or remove it at any time.
 
 - **Cameras:** GoPro (HERO with GPS; tested on a HERO10 Black, Gyroflow exports included) and DJI Avata 2. Betaflight blackbox logs come after the first release.

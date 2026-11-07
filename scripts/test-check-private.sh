@@ -82,6 +82,18 @@ expect 1 "site/media file over 25 MB blocked"
 reset_repo; mkdir -p "$TMP/repo/site"; echo x > "$TMP/repo/site/clip.MP4"; (cd "$TMP/repo" && git add -f site/clip.MP4)
 expect 1 "video outside site/media still blocked"
 
+reset_repo; mkdir -p "$TMP/repo/site/media"; echo x > "$TMP/repo/site/media/DJIFlightRecord_2025-06-01_[10-30-00].txt"; (cd "$TMP/repo" && git add -f site/media)
+expect 1 "flight record under site/media blocked"
+
+reset_repo; mkdir -p "$TMP/repo/site/media"; echo x > "$TMP/repo/site/media/flight.LRV"; (cd "$TMP/repo" && git add -f site/media)
+expect 1 "camera file other than mp4 under site/media blocked"
+
+reset_repo; mkdir -p "$TMP/repo/site/media"; echo x > "$TMP/repo/site/media/SN-0042.jpg"; (cd "$TMP/repo" && git add -f site/media)
+expect 1 "private word in a site/media file name blocked"
+
+reset_repo; mkdir -p "$TMP/repo/site/media"; echo "over the secret lake" > "$TMP/repo/site/media/caption.vtt"; (cd "$TMP/repo" && git add -f site/media)
+expect 1 "private word inside a site/media file blocked"
+
 reset_repo; echo "SkyHUD" > "$TMP/repo/README.md"; (cd "$TMP/repo" && git add README.md)
 expect 0 "normal file allowed"
 

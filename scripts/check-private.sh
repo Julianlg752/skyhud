@@ -37,14 +37,15 @@ IFS='
 '
 for f in $files; do
 	lower=$(printf '%s' "$f" | tr '[:upper:]' '[:lower:]')
-	# site/media holds media Julian approved for the public landing page.
+	# site/media holds media Julian approved for the public landing page:
+	# mp4 videos and a bigger size limit are allowed there, every other check still runs.
+	max=$MAX_BYTES
 	case $lower in
-	site/media/*)
-		size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
-		if [ "$size" -gt "$MAX_SITE_MEDIA_BYTES" ]; then
-			echo "blocked: $f is larger than 25 MB"; blocked=1
-		fi
-		continue;;
+	site/media/*) max=$MAX_SITE_MEDIA_BYTES ;;
+	esac
+	case $lower in
+	site/media/*djiflightrecord_*) ;;
+	site/media/*.mp4) lower=site-media-video ;;
 	esac
 	case $lower in
 	*.mp4|*.mov|*.lrv|*.thm|*.bbl|*.bfl|*.dat|*.insv|*djiflightrecord_*.txt|*.decoded.json|*dji_key|*.key)
@@ -57,8 +58,8 @@ for f in $files; do
 		fi
 	fi
 	size=$(git cat-file -s ":$f" 2>/dev/null || echo 0)
-	if [ "$size" -gt "$MAX_BYTES" ]; then
-		echo "blocked: $f is larger than 5 MB"; blocked=1
+	if [ "$size" -gt "$max" ]; then
+		echo "blocked: $f is larger than $((max / 1048576)) MB"; blocked=1
 	fi
 done
 unset IFS
