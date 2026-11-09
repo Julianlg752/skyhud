@@ -187,16 +187,25 @@ type Vars struct {
 	Imperial   bool                  // units: mph and ft instead of km/h and m
 }
 
-// unitPlaceholders are the labels that follow the panel's units.
-var unitPlaceholders = []string{"{{speedunit}}", "{{SPEEDUNIT}}", "{{heightunit}}", "{{HEIGHTUNIT}}"}
+// The data is always km/h and m, so gauges keep their scale in any units;
+// designs convert it for display with these placeholders.
+var unitPlaceholders = []string{"{{speedunit}}", "{{SPEEDUNIT}}", "{{heightunit}}", "{{HEIGHTUNIT}}",
+	"{{speedfactor}}", "{{heightfactor}}", "{{speedstep}}", "{{heightstep}}"}
 
-// HasUnits reports whether the design labels speed and height with the unit
-// placeholders. Designs with fixed labels (made before the units option)
-// always get metric values, so their labels stay right.
-func (d *Design) HasUnits() bool {
-	speed := strings.Contains(d.Template, unitPlaceholders[0]) || strings.Contains(d.Template, unitPlaceholders[1])
-	height := strings.Contains(d.Template, unitPlaceholders[2]) || strings.Contains(d.Template, unitPlaceholders[3])
-	return speed && height
+const (
+	mphPerKmh = 1 / 1.609344
+	ftPerM    = 1 / 0.3048
+)
+
+// UnitAware reports whether the design uses any unit placeholder. Designs
+// with fixed labels (made before the units option) always show metric.
+func (d *Design) UnitAware() bool {
+	for _, p := range unitPlaceholders {
+		if strings.Contains(d.Template, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // Render returns the design's tools with placeholders filled.
@@ -218,13 +227,17 @@ func (d *Design) Render(v Vars) (string, error) {
 		v.GLabel = "G"
 	}
 	speed, height := "km/h", "m"
+	speedFactor, heightFactor, heightStep := 1.0, 1.0, 5.0
 	if v.Imperial {
 		speed, height = "mph", "ft"
+		speedFactor, heightFactor, heightStep = mphPerKmh, ftPerM, 15
 	}
 	repl := []string{"{{mono}}", v.Mono, "{{sans}}", v.Sans, "{{font}}", font,
 		"{{aspect}}", num(v.Aspect), "{{path}}", v.Path, "{{glabel}}", v.GLabel,
 		unitPlaceholders[0], speed, unitPlaceholders[1], strings.ToUpper(speed),
-		unitPlaceholders[2], height, unitPlaceholders[3], strings.ToUpper(height)}
+		unitPlaceholders[2], height, unitPlaceholders[3], strings.ToUpper(height),
+		unitPlaceholders[4], num(speedFactor), unitPlaceholders[5], num(heightFactor),
+		unitPlaceholders[6], "10", unitPlaceholders[7], num(heightStep)}
 	colors := map[string][3]float64{}
 	for k, c := range d.Colors {
 		colors[k] = c

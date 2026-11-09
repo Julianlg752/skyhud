@@ -25,7 +25,7 @@ type Settings struct {
 	Height HeightMode      `json:"height"`
 	Layout map[Piece]Place `json:"layout"` // overrides of the design's places
 	Scale  float64         `json:"scale"`  // whole HUD, 1 = as designed
-	Units  Units           `json:"units"`  // metric unless set to imperial
+	Units  Units           `json:"units"`  // how designs label speed and height; the data stays metric
 }
 
 // Units chooses how speed and height are shown.
@@ -34,11 +34,6 @@ type Units string
 const (
 	Metric   Units = "metric"   // km/h and m
 	Imperial Units = "imperial" // mph and ft
-)
-
-const (
-	kmPerMile   = 1.609344
-	metersPerFt = 0.3048
 )
 
 // DefaultSettings shows every piece at the design's places.
@@ -136,11 +131,7 @@ func WriteComp(w io.Writer, v Values, d *design.Design, s Settings, st Style) er
 	if st.GForceEstimated {
 		label = "G (EST)"
 	}
-	imperial := s.Units == Imperial && d.HasUnits()
-	if imperial {
-		v = toImperial(v)
-	}
-	vars := design.Vars{Mono: st.Mono, Sans: st.Sans, Aspect: st.Aspect, Path: st.Path, Colors: st.Colors, Font: st.Font, GLabel: label, Imperial: imperial}
+	vars := design.Vars{Mono: st.Mono, Sans: st.Sans, Aspect: st.Aspect, Path: st.Path, Colors: st.Colors, Font: st.Font, GLabel: label, Imperial: s.Units == Imperial}
 	if ps := design.CheckWith(d, vars); len(ps) > 0 {
 		return fmt.Errorf("design %s was refused: %s", d.Name, ps[0])
 	}
@@ -216,23 +207,6 @@ func WriteComp(w io.Writer, v Values, d *design.Design, s Settings, st Style) er
 	}
 	b.WriteString("\t\t\t},\n\t\t},\n\t},\n}\n")
 	return b.Flush()
-}
-
-// toImperial returns a copy of v with speed in mph and height in feet.
-func toImperial(v Values) Values {
-	out := Values{}
-	for p, s := range v {
-		out[p] = s
-	}
-	for p, f := range map[Piece]float64{Speed: 1 / kmPerMile, Height: 1 / metersPerFt} {
-		s := v[p]
-		conv := Series{V: make([]float64, len(s.V)), OK: s.OK}
-		for i, x := range s.V {
-			conv.V[i] = x * f
-		}
-		out[p] = conv
-	}
-	return out
 }
 
 // PathPolyline renders path points (from PathPoints) as Fusion Polyline

@@ -20,7 +20,7 @@ To change anything (design, pieces, size, height reference), change it in the pa
 | **Read the shot under the playhead** | Shows what SkyHUD finds in the clip under the playhead: camera, length, which data it has, Gyroflow original, flight log. |
 | **Design** | The HUD's look. Your own designs appear here too. |
 | **HUD size** | Scales the whole HUD, 50 % to 200 %. |
-| **Units** | "km/h, m" or "mph, ft" for speed and height. Press **Add HUD to all shots** to apply. |
+| **Units** | "km/h, m" or "mph, ft" for speed and height. HUDs already on the timeline update. |
 | **Colors** | One color picker per color of the chosen design (Main, Accent, …), a **Font** choice (the design's own, Mono or Sans) and **Reset colors**. Each design keeps its own colors; the built-in design itself never changes. HUDs already on the timeline update half a second after you pick a color. |
 | **Show** | Turn pieces on or off: Speed, Height, G-force, Horizon, Flight path, Stick positions, Battery, Flip badge. "(not in this design)" means the design has no such piece. |
 | **Height** | "Above takeoff" (from the start of the recording, never below 0) or "Above sea level". GoPro height comes from GPS and is rough (about ±10 m). |

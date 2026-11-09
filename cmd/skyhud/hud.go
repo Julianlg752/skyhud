@@ -153,7 +153,7 @@ func hudCommand(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 	s := jobs.Settings.merge(d.ID)
-	if s.Units == hud.Imperial && !d.HasUnits() {
+	if s.Units == hud.Imperial && !d.UnitAware() && (s.Show[hud.Speed] || s.Show[hud.Height]) {
 		designNote = strings.TrimPrefix(designNote+"; design "+d.Name+" shows fixed km/h and m labels, so it stays metric (the design guide shows how to add mph and ft)", "; ")
 	}
 	style := hud.Style{Mono: hud.DefaultFont(runtime.GOOS), Sans: hud.DefaultSans(runtime.GOOS), Aspect: jobs.Aspect}

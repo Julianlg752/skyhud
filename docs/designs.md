@@ -85,9 +85,9 @@ SkyHUD writes one keyframe track per value into three data tools. Read them in e
 
 | Tool | Input | Value |
 |---|---|---|
-| `HUDData` | `NumberIn1` | speed, km/h or mph (see `{{speedunit}}`) |
+| `HUDData` | `NumberIn1` | speed, km/h (always; see [units](#units)) |
 | | `NumberIn2` | speed OK |
-| | `NumberIn3` | height, m or ft (see `{{heightunit}}`), above takeoff or sea level as chosen in the panel |
+| | `NumberIn3` | height, m (always), above takeoff or sea level as chosen in the panel |
 | | `NumberIn4` | height OK |
 | | `NumberIn5` | g-force, g |
 | | `NumberIn6` | g-force OK |
@@ -129,8 +129,12 @@ SkyHUD replaces these in `design.setting` before loading it:
 | `{{glabel}}` | `G` or `G (EST)` |
 | `{{speedunit}}`, `{{SPEEDUNIT}}` | `km/h` or `mph` (`KM/H` or `MPH`), from the panel's **Units** |
 | `{{heightunit}}`, `{{HEIGHTUNIT}}` | `m` or `ft` (`M` or `FT`) |
+| `{{speedfactor}}`, `{{heightfactor}}` | what to multiply the km/h and m values by to show the chosen units: `1`, or `0.62…` (mph) and `3.28…` (ft) |
+| `{{speedstep}}`, `{{heightstep}}` | a round tick step for scales and tapes: 10 (km/h or mph); 5 m or 15 ft |
 
-Label speed and height with the unit placeholders, never a fixed "km/h" or "m": SkyHUD only switches a design to mph and feet when it uses both, so its numbers and labels always agree. A design with fixed labels stays metric.
+### Units
+
+The data is always km/h and meters, so gauges (an arc that fills at 60 km/h, a scale's spacing) look the same in any units. Only what the viewer reads changes: multiply a shown number by the factor and label it with the unit, e.g. `string.format("%.0f {{speedunit}}", HUDData.NumberIn1 * {{speedfactor}})`. For a tape whose tick k reads `k * {{heightstep}}` in the chosen units, place it at `k * {{heightstep}} / {{heightfactor}}` meters. A design with none of these placeholders shows metric whatever the panel says, and the panel tells the user.
 
 ### Expressions
 
@@ -140,7 +144,7 @@ Examples from the built-in designs:
 
 ```lua
 -- speed text with a fallback
-Text(HUDData.NumberIn2 > 0.5 and string.format("SPEED\n%.0f {{speedunit}}", HUDData.NumberIn1) or "SPEED\n-- {{speedunit}}")
+Text(HUDData.NumberIn2 > 0.5 and string.format("SPEED\n%.0f {{speedunit}}", HUDData.NumberIn1 * {{speedfactor}}) or "SPEED\n-- {{speedunit}}")
 -- a speed arc: an EllipseMask's WriteLength grows with speed up to 60 (km/h or mph)
 0.5 * math.min(1, HUDData.NumberIn1 / 60)
 -- the flip badge shows only while upside down

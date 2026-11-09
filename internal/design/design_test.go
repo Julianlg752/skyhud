@@ -3,6 +3,7 @@ package design
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -124,33 +125,35 @@ func TestLoadPastedFusionClipboard(t *testing.T) {
 }
 
 func TestRenderUnits(t *testing.T) {
-	d := &Design{ID: "u", Template: `A = Input { Expression = "Text(\"{{speedunit}} {{heightunit}} {{SPEEDUNIT}} {{HEIGHTUNIT}}\")", },`}
+	d := &Design{ID: "u", Template: `A = Input { Expression = "Text(\"{{speedunit}} {{heightunit}} {{SPEEDUNIT}} {{HEIGHTUNIT}} {{speedfactor}} {{heightfactor}} {{speedstep}} {{heightstep}}\")", },`}
 	metric, err := d.Render(Vars{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(metric, `km/h m KM/H M`) {
+	if !strings.Contains(metric, `km/h m KM/H M 1 1 10 5`) {
 		t.Errorf("metric render = %s", metric)
 	}
 	imperial, err := d.Render(Vars{Imperial: true})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(imperial, `mph ft MPH FT`) {
+	if !strings.Contains(imperial, `mph ft MPH FT 0.6213711922 3.280839895 10 15`) {
 		t.Errorf("imperial render = %s", imperial)
 	}
-	if !d.HasUnits() {
-		t.Error("design with unit placeholders not detected")
+	for _, tmpl := range []string{`{{speedunit}}`, `{{HEIGHTUNIT}}`, `x * {{heightfactor}}`} {
+		if !(&Design{Template: tmpl}).UnitAware() {
+			t.Errorf("%s: not detected as following the units", tmpl)
+		}
 	}
-	if (&Design{Template: `Text(\"KM/H\")`}).HasUnits() {
-		t.Error("design with fixed units detected as switchable")
+	if (&Design{Template: `Text(\"KM/H\")`}).UnitAware() {
+		t.Error("design with fixed units detected as following the units")
 	}
 }
 
-func TestBuiltinsUseUnitPlaceholders(t *testing.T) {
+func TestBuiltinsFollowUnits(t *testing.T) {
 	for _, d := range Builtins() {
-		if !d.HasUnits() {
-			t.Errorf("%s: speed and height units are fixed", d.ID)
+		if !d.UnitAware() {
+			t.Errorf("%s: units are fixed", d.ID)
 		}
 		out, err := d.Render(Vars{Imperial: true})
 		if err != nil {
@@ -158,6 +161,12 @@ func TestBuiltinsUseUnitPlaceholders(t *testing.T) {
 		}
 		if strings.Contains(strings.ToLower(out), "km/h") {
 			t.Errorf("%s: imperial render still shows km/h", d.ID)
+		}
+		// every shown speed or height number is converted for display
+		for _, m := range regexp.MustCompile(`string\.format\([^)]*HUDData\.NumberIn[13]\b[^)]*\)`).FindAllString(out, -1) {
+			if !strings.Contains(m, "* 0.6213711922") && !strings.Contains(m, "* 3.280839895") {
+				t.Errorf("%s: number shown without conversion: %s", d.ID, m)
+			}
 		}
 	}
 }
