@@ -1,6 +1,6 @@
 # Tutorial video scripts
 
-Five short screen recordings for the release page and the docs. Each script lists the shots in order with what to say. Record at 1920×1080 or larger, with Resolve's UI at normal size.
+Five short screen recordings for the release page and the docs. Videos 4 and 5 already exist as simplified, captioned versions (built from drawn screens, not real recordings); record real ones with these scripts if the simplified screens drift from DJI's. Each script lists the shots in order with what to say. Record at 1920×1080 or larger, with Resolve's UI at normal size.
 
 **Before recording:** use footage you're happy to publish. Your own sample clips show your home, locations and a person; don't use them. Hide the Resolve project list and recent files if they show private names. Never show your DJI key: paste it from the clipboard while the field is off screen, or blur it afterwards.
 
@@ -64,7 +64,7 @@ For DJI Avata 2 pilots who want sticks and battery. No narration needed: the "Sa
 
 Newer DJI logs are encrypted. A free DJI developer key unlocks them; you set it up once.
 
-**Privacy:** never show the key. Blur the App Key, your email and your account name, or cover them while recording.
+**Privacy:** never show the key. Blur the SDK key, your email and your account name, or cover them while recording.
 
 | # | Shot | Say |
 |---|---|---|
@@ -73,6 +73,6 @@ Newer DJI logs are encrypted. A free DJI developer key unlocks them; you set it 
 | 3 | User Center > Apps > Create App | "Open your user center, go to Apps and click Create App." |
 | 4 | Form: App Type Open API, name SkyHUD, a category and a short description, Create | "Choose Open API as the app type. Any name and description will do." |
 | 5 | Email: DJI's activation email, click the link | "DJI emails you an activation link. Click it." |
-| 6 | Apps list: open the app, copy the App Key (blurred) | "Open your new app and copy its App Key." |
+| 6 | Apps list: open the app, copy the SDK key (blurred) | "Open your new app and copy its SDK key." |
 | 7 | SkyHUD panel: paste in the key field, Save key, status says the key is stored | "Paste it in the SkyHUD panel and press Save key. It stays in your system keychain, and SkyHUD sends it only to DJI's key service, once per log." |
 | 8 | Add HUD to all shots on an Avata 2 clip with a log folder, sticks and battery moving | "That's it: sticks and battery, from your own logs." |
