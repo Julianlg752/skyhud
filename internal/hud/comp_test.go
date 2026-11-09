@@ -252,27 +252,30 @@ func TestImperialUnits(t *testing.T) {
 	s := DefaultSettings()
 	s.Units = Imperial
 	out := comp(t, steady(10, 100, 10, 1, 0), goggles(t), s)
-	for _, want := range []string{"[0] = { 62.13711922", "[0] = { 32.80839895", "mph", "ft"} {
+	// the data stays metric (gauges keep their scale); the labels convert it
+	for _, want := range []string{"[0] = { 100", "[0] = { 10", "mph", "ft", "HUDData.NumberIn1 * 0.6213711922", "HUDData.NumberIn3 * 3.280839895"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("imperial comp lacks %q", want)
 		}
 	}
 	metric := comp(t, steady(10, 100, 10, 1, 0), goggles(t), DefaultSettings())
-	for _, want := range []string{"[0] = { 100", "[0] = { 10", "km/h"} {
+	for _, want := range []string{"[0] = { 100", "km/h", "HUDData.NumberIn1 * 1"} {
 		if !strings.Contains(metric, want) {
 			t.Errorf("metric comp lacks %q", want)
 		}
 	}
 }
 
-func TestImperialKeepsMetricForFixedUnitDesign(t *testing.T) {
-	d := goggles(t)
-	fixed := *d
-	fixed.Template = strings.NewReplacer("{{speedunit}}", "km/h", "{{heightunit}}", "m").Replace(d.Template)
+func TestFighterTapesInFeet(t *testing.T) {
+	d, err := design.Find("fighter", "")
+	if err != nil {
+		t.Fatal(err)
+	}
 	s := DefaultSettings()
 	s.Units = Imperial
-	out := comp(t, steady(10, 100, 10, 1, 0), &fixed, s)
-	if !strings.Contains(out, "[0] = { 100") || strings.Contains(out, "mph") {
-		t.Error("a design with fixed km/h labels must keep metric values")
+	out := comp(t, withLogAndPath(steady(10, 100, 10, 1, 0), 10), d, s)
+	// tick 8 of the height tape reads 120 ft and sits at 120 ft (36.6 m), so the tape covers the same height as in meters
+	if !strings.Contains(out, `string.format(\"%.0f\", 8 * 15)`) || !strings.Contains(out, "(8 * 15 / 3.280839895 - HUDData.NumberIn3)") {
+		t.Error("height tape ticks not in feet")
 	}
 }

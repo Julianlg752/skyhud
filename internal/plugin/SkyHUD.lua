@@ -752,10 +752,10 @@ function SkyHUD.window()
 	-- A color or font change rebuilds the HUDs already on the timeline, half a
 	-- second after the last change (a picker sends many while dragging).
 	local recolor = ui:Timer{ ID = "Recolor", Interval = 500, SingleShot = true }
-	local function colorsChanged()
+	local function colorsChanged(what)
 		save()
 		if SkyHUD.hasOverlays() then
-			items.Status.PlainText = "Updating colors..."
+			items.Status.PlainText = "Updating " .. (what or "colors") .. "..."
 			recolor:Start()
 		end
 	end
@@ -821,7 +821,9 @@ function SkyHUD.window()
 	end
 	function win.On.Units.CurrentIndexChanged()
 		local u = UNITS[items.Units.CurrentIndex + 1]
-		if u then s.units = u[1]; save() end
+		if not u or u[1] == s.units then return end
+		s.units = u[1]
+		colorsChanged("units") -- rebuilds the HUDs already on the timeline
 	end
 	function win.On.Track.ValueChanged() s.track = items.Track.Value; save() end
 	function win.On.Nudge.ValueChanged()

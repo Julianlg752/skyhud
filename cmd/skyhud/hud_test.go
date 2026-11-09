@@ -698,14 +698,29 @@ func TestHudImperialUnits(t *testing.T) {
 	// A design saved before the units option keeps its fixed labels, so it
 	// stays metric and the panel says why.
 	designs := t.TempDir()
-	old, _ := design.Find("clean", "")
+	old, err := design.Find("clean", "")
+	if err != nil {
+		t.Fatal(err)
+	}
 	old.ID, old.Name = "old", "Old"
-	old.Template = strings.NewReplacer("{{speedunit}}", "km/h", "{{heightunit}}", "m").Replace(old.Template)
+	old.Template = strings.NewReplacer("{{speedunit}}", "km/h", "{{heightunit}}", "m", " * {{speedfactor}}", "", " * {{heightfactor}}", "").Replace(old.Template)
 	if err := old.Save(filepath.Join(designs, "old")); err != nil {
 		t.Fatal(err)
 	}
 	out, comps = runWith(t, map[string]any{"design": "old", "designs": designs, "units": "imperial"}, shotJob{ID: "b", File: wavyAvata(t, dir), Track: 1, Frames: 20, Speed: 100, Out: filepath.Join(dir, "b.comp")})
 	if !strings.Contains(comps["b"], "km/h") || !strings.Contains(out, "design Old shows fixed km/h and m labels") {
 		t.Fatalf("old design: %q", out)
+	}
+
+	// A design that only shows speed, labelled with the placeholders, follows the units with no note.
+	speedOnly, _ := design.Find("clean", "")
+	speedOnly.ID, speedOnly.Name = "speedonly", "Speed only"
+	speedOnly.Template = strings.NewReplacer("{{heightunit}}", "m", "{{heightfactor}}", "1").Replace(speedOnly.Template)
+	if err := speedOnly.Save(filepath.Join(designs, "speedonly")); err != nil {
+		t.Fatal(err)
+	}
+	out, comps = runWith(t, map[string]any{"design": "speedonly", "designs": designs, "units": "imperial"}, shotJob{ID: "c", File: wavyAvata(t, dir), Track: 1, Frames: 20, Speed: 100, Out: filepath.Join(dir, "c.comp")})
+	if !strings.Contains(comps["c"], "mph") || strings.Contains(out, "fixed km/h") {
+		t.Fatalf("speed-only design: %q", out)
 	}
 }
