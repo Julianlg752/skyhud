@@ -9,12 +9,16 @@ SkyHUD has two parts: a small program (`skyhud`) that reads your camera files, a
    - Intel: `SkyHUD-<version>-macOS-x64.zip`
 
    Not sure? Apple menu > About This Mac: "Chip: Apple M…" means Apple silicon.
-2. Double-click the zip to unpack it, then open the `SkyHUD-<version>-…` folder.
+2. Double-click the zip to extract it, then open the `SkyHUD-<version>-…` folder.
 3. Double-click **Install SkyHUD.command**.
 
-   SkyHUD isn't signed by Apple yet, so the first time macOS says it "cannot be opened because the developer cannot be verified" or "Apple could not verify…". Then:
-   - **Right-click** (or Control-click) **Install SkyHUD.command** and choose **Open**, then **Open** again in the dialog.
-   - On macOS 15 and later, if there is no Open button: click **Done**, open **System Settings > Privacy & Security**, scroll down to the message about "Install SkyHUD.command" and click **Open Anyway**, then double-click the file again.
+   SkyHUD isn't signed by Apple yet, so the first time macOS blocks it with a message like "Apple could not verify "Install SkyHUD.command" is free of malware" or "cannot be opened because the developer cannot be verified". To allow it:
+   1. Click **Done** (or **OK**) to close the message.
+   2. Open **System Settings > Privacy & Security**.
+   3. Scroll down to the **Security** section. Next to "Install SkyHUD.command was blocked…", click **Open Anyway**.
+   4. In the message that appears, click **Open Anyway** again and enter your Mac password if asked.
+
+   You only do this once. On macOS 14 and earlier there is a shortcut: right-click (or Control-click) the file, choose **Open**, then **Open** again.
 4. A Terminal window opens and installs SkyHUD. If you fly a DJI Avata 2, it asks for your DJI API key (see [DJI key](#dji-api-key-avata-2-only)); press Return to skip.
 5. Restart DaVinci Resolve. The panel is at **Workspace > Scripts > SkyHUD**.
 
@@ -44,7 +48,14 @@ The HUD works from the Avata 2's own video without any key: speed, height, horiz
 
 Where it goes: your system keychain (macOS Keychain, Windows Credential Manager), never a file. SkyHUD sends it only to DJI's key service, once per encrypted log; the unlocked keys are cached on your computer so a log is never sent twice. From a terminal: `skyhud key status` says whether a key is stored, and `skyhud key set` reads a new one from standard input.
 
-Getting your flight logs onto the computer: they are the `DJIFlightRecord_*.txt` files in the DJI Fly app's folder on your phone (on Android: `Android/data/dji.go.v5/files/FlightRecord`; on iPhone: connect it to your computer and copy the FlightRecords folder from DJI Fly's files in Finder or the Apple Devices app). Put them all in one folder and choose that folder in the panel.
+## Getting your flight logs (Avata 2 only)
+
+DJI Fly saves a `DJIFlightRecord_*.txt` log for every flight. Open DJI Fly with your goggles connected after flying, so the latest flights reach your phone. Then copy them to your computer:
+
+- **iPhone:** connect it with a cable and open it in Finder (on Windows: the Apple Devices app). Go to **Files**, open **DJI Fly** and drag the **FlightRecords** folder to your computer.
+- **Android:** connect it and allow file transfer, then copy `Android/data/dji.go.v5/files/FlightRecord` from the phone's internal storage.
+
+Keep all the logs in one folder and choose it in the panel (**Choose logs folder…**). Copy the folder again after new flights: SkyHUD finds the log that belongs to each clip.
 
 ## Updating
 

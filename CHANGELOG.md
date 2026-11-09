@@ -5,6 +5,10 @@
 **Fixes**
 - The SkyHUD panel now uses two columns and fits on a laptop screen. Before, the window was taller than a 14-inch MacBook screen: the "Scan a flight folder…" button and the message box at the bottom were cut off, and the hint under "Use this shot's layout for all" was squashed.
 
+**Docs**
+- Install steps say to extract the zip first, and explain how to get past macOS's first-run block (System Settings > Privacy & Security > Open Anyway; right-click > Open no longer works on macOS 15 and later).
+- New install guide section on copying DJI Fly flight logs from an iPhone or Android phone, and scripts for two new tutorial videos (flight logs, DJI key).
+
 ## 0.1.1 (2026-11-06)
 
 **Fixes**

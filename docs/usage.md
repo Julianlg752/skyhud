@@ -52,12 +52,12 @@ The Avata 2's own video file holds speed, height above takeoff, attitude (horizo
 
 Stick positions and battery live in the DJI Fly flight logs on your phone:
 
-1. Copy the `DJIFlightRecord_*.txt` files into one folder on your computer ([where to find them](install.md#dji-api-key-avata-2-only)).
+1. Copy the `DJIFlightRecord_*.txt` files into one folder on your computer ([where to find them](install.md#getting-your-flight-logs-avata-2-only)).
 2. In the panel, **Choose logs folder…** and pick that folder.
 3. Store your DJI API key once (**Save key**, or during install).
 4. Press **Add HUD to all shots**.
 
-SkyHUD picks the log that belongs to each clip and lines it up by comparing heights; the panel says which log it used and the offset it found, e.g. `flight log DJIFlightRecord_2025-06-01_[10-30-00].txt (offset -0.55 s)`.
+SkyHUD picks the log that belongs to each clip and lines it up by ground speed, then fine-tunes it by matching the video's roll with the aileron stick; the panel says which log it used and the offset it found, e.g. `flight log DJIFlightRecord_2025-06-01_[10-30-00].txt (offset -0.55 s)`.
 
 ## Designs
 

@@ -14,7 +14,7 @@ Most pilots post their goggles' OSD as it is. SkyHUD lets you edit and grade you
 
 ## Quick start
 
-1. Download the zip for your computer and run the install script inside it ([install guide](docs/install.md)).
+1. Download the zip file for your computer, extract it, and run the install script ([install guide](docs/install.md)). On a Mac, the first time, macOS blocks the script: open System Settings > Privacy & Security, scroll down and click **Open Anyway**.
 2. Restart Resolve, edit and grade as usual.
 3. Open **Workspace > Scripts > SkyHUD**, pick a design and press **Add HUD to all shots**.
 

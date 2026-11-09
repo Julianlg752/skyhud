@@ -8,8 +8,9 @@ The HUD stays editable: it is never burned into your video.
 Install
 -------
 macOS:   double-click "Install SkyHUD.command".
-         The first time macOS may say it can't verify the developer:
-         right-click the file, choose Open, then Open again.
+         The first time macOS blocks it (it can't verify the developer):
+         click Done, open System Settings > Privacy & Security, scroll
+         down and click Open Anyway, then Open Anyway again.
 Windows: double-click "Install SkyHUD.bat".
          If SmartScreen appears: More info > Run anyway.
 

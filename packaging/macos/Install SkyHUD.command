@@ -1,6 +1,7 @@
 #!/bin/bash
 # Installs SkyHUD for DaVinci Resolve. Double-click this file in Finder
-# (the first time: right-click > Open, see docs/install.md).
+# (the first time: System Settings > Privacy & Security > Open Anyway,
+# see docs/install.md).
 set -e
 cd "$(dirname "$0")"
 
