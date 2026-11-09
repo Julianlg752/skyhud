@@ -57,6 +57,7 @@ local function defaults()
 		show = { speed = true, height = true, gforce = true, horizon = true, path = true, sticks = true, battery = true, flip = true },
 		logs = "",
 		height = "start",
+		units = "metric",
 		design = "goggles",
 		scale = 1,
 		layouts = {}, -- per design: piece -> { x, y, size } of its placing Transform
@@ -367,7 +368,7 @@ function SkyHUD.fill(scope)
 	local h = tonumber(c.tl:GetSetting("timelineResolutionHeight")) or 9
 	os.remove(jobsPath) -- never let skyhud read an older jobs file
 	if not writeFile(jobsPath, encode({ version = 1, fps = fps, aspect = w / h, otio = otio, shots = jobs,
-		settings = { show = s.show, height = s.height, logs = s.logs or "", design = s.design, designs = designsDir(),
+		settings = { show = s.show, height = s.height, units = s.units, logs = s.logs or "", design = s.design, designs = designsDir(),
 			scale = s.scale, layouts = s.layouts, layoutVersion = 2, designColors = s.colors, designFonts = s.fonts } })) then
 		return { ok = 0, skipped = {}, message = "Could not write " .. jobsPath }
 	end
@@ -550,6 +551,7 @@ end
 -- Window
 
 local HEIGHT_MODES = { { "start", "Above takeoff (start of recording)" }, { "sea", "Above sea level" } }
+local UNITS = { { "metric", "km/h, m" }, { "imperial", "mph, ft" } }
 
 local function currentShot(c, track)
 	local it = shotItems(c, track, "current")[1]
@@ -591,6 +593,8 @@ function SkyHUD.window()
 					ui:Label{ Text = "HUD size", Weight = 0 },
 					ui:Slider{ ID = "Scale", Minimum = 50, Maximum = 200 },
 					ui:Label{ ID = "ScaleText", Text = "", Weight = 0 },
+					ui:Label{ Text = "Units", Weight = 0 },
+					ui:ComboBox{ ID = "Units", Weight = 0 },
 				},
 				ui:HGroup{ Weight = 0,
 					ui:Label{ Text = "<b>Colors</b>", Weight = 0 },
@@ -708,6 +712,10 @@ function SkyHUD.window()
 		items.HeightMode:AddItem(m[2])
 		if s.height == m[1] then items.HeightMode.CurrentIndex = i - 1 end
 	end
+	for i, u in ipairs(UNITS) do
+		items.Units:AddItem(u[2])
+		if s.units == u[1] then items.Units.CurrentIndex = i - 1 end
+	end
 
 	local function showLogs()
 		items.Logs.Text = (s.logs and s.logs ~= "") and ("Logs: " .. s.logs) or "Logs: not set"
@@ -810,6 +818,10 @@ function SkyHUD.window()
 	function win.On.HeightMode.CurrentIndexChanged()
 		local m = HEIGHT_MODES[items.HeightMode.CurrentIndex + 1]
 		if m then s.height = m[1]; save() end
+	end
+	function win.On.Units.CurrentIndexChanged()
+		local u = UNITS[items.Units.CurrentIndex + 1]
+		if u then s.units = u[1]; save() end
 	end
 	function win.On.Track.ValueChanged() s.track = items.Track.Value; save() end
 	function win.On.Nudge.ValueChanged()

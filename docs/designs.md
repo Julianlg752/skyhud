@@ -85,9 +85,9 @@ SkyHUD writes one keyframe track per value into three data tools. Read them in e
 
 | Tool | Input | Value |
 |---|---|---|
-| `HUDData` | `NumberIn1` | speed, km/h |
+| `HUDData` | `NumberIn1` | speed, km/h or mph (see `{{speedunit}}`) |
 | | `NumberIn2` | speed OK |
-| | `NumberIn3` | height, m (above takeoff or sea level, as chosen in the panel) |
+| | `NumberIn3` | height, m or ft (see `{{heightunit}}`), above takeoff or sea level as chosen in the panel |
 | | `NumberIn4` | height OK |
 | | `NumberIn5` | g-force, g |
 | | `NumberIn6` | g-force OK |
@@ -127,6 +127,10 @@ SkyHUD replaces these in `design.setting` before loading it:
 | `{{aspect}}` | the frame's width divided by its height (Fusion's Y is measured in frame heights, so multiply vertical offsets by it to keep circles round) |
 | `{{path}}` | the recording's flight path as Polyline points, centered on 0 and spanning -0.5 to 0.5; give the PolylineMask a `Size` to set the box size, and put the dot at `Point(0.5 + HUDData3.NumberIn3 * Size, 0.5 + HUDData3.NumberIn4 * Size * {{aspect}})` |
 | `{{glabel}}` | `G` or `G (EST)` |
+| `{{speedunit}}`, `{{SPEEDUNIT}}` | `km/h` or `mph` (`KM/H` or `MPH`), from the panel's **Units** |
+| `{{heightunit}}`, `{{HEIGHTUNIT}}` | `m` or `ft` (`M` or `FT`) |
+
+Label speed and height with the unit placeholders, never a fixed "km/h" or "m": SkyHUD only switches a design to mph and feet when it uses both, so its numbers and labels always agree. A design with fixed labels stays metric.
 
 ### Expressions
 
@@ -136,8 +140,8 @@ Examples from the built-in designs:
 
 ```lua
 -- speed text with a fallback
-Text(HUDData.NumberIn2 > 0.5 and string.format("SPEED\n%.0f km/h", HUDData.NumberIn1) or "SPEED\n-- km/h")
--- a speed arc: an EllipseMask's WriteLength grows with speed up to 60 km/h
+Text(HUDData.NumberIn2 > 0.5 and string.format("SPEED\n%.0f {{speedunit}}", HUDData.NumberIn1) or "SPEED\n-- {{speedunit}}")
+-- a speed arc: an EllipseMask's WriteLength grows with speed up to 60 (km/h or mph)
 0.5 * math.min(1, HUDData.NumberIn1 / 60)
 -- the flip badge shows only while upside down
 Text(HUDData3.NumberIn7 > 0.5 and "FLIP!" or "")

@@ -122,3 +122,42 @@ func TestLoadPastedFusionClipboard(t *testing.T) {
 		t.Fatalf("template not unwrapped: %q", d.Template)
 	}
 }
+
+func TestRenderUnits(t *testing.T) {
+	d := &Design{ID: "u", Template: `A = Input { Expression = "Text(\"{{speedunit}} {{heightunit}} {{SPEEDUNIT}} {{HEIGHTUNIT}}\")", },`}
+	metric, err := d.Render(Vars{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(metric, `km/h m KM/H M`) {
+		t.Errorf("metric render = %s", metric)
+	}
+	imperial, err := d.Render(Vars{Imperial: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(imperial, `mph ft MPH FT`) {
+		t.Errorf("imperial render = %s", imperial)
+	}
+	if !d.HasUnits() {
+		t.Error("design with unit placeholders not detected")
+	}
+	if (&Design{Template: `Text(\"KM/H\")`}).HasUnits() {
+		t.Error("design with fixed units detected as switchable")
+	}
+}
+
+func TestBuiltinsUseUnitPlaceholders(t *testing.T) {
+	for _, d := range Builtins() {
+		if !d.HasUnits() {
+			t.Errorf("%s: speed and height units are fixed", d.ID)
+		}
+		out, err := d.Render(Vars{Imperial: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(strings.ToLower(out), "km/h") {
+			t.Errorf("%s: imperial render still shows km/h", d.ID)
+		}
+	}
+}

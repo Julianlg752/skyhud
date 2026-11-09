@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Julianlg752/skyhud/internal/design"
 	"github.com/Julianlg752/skyhud/internal/dji/djitest"
 	"github.com/Julianlg752/skyhud/internal/djilog/djilogtest"
 	"github.com/Julianlg752/skyhud/internal/gpmf/gpmftest"
@@ -685,4 +686,26 @@ func TestDesignListTSVColors(t *testing.T) {
 		}
 	}
 	t.Fatalf("no race line: %q", out)
+}
+
+func TestHudImperialUnits(t *testing.T) {
+	dir := t.TempDir()
+	out, comps := runWith(t, map[string]any{"design": "race", "units": "imperial"}, shotJob{ID: "a", File: wavyAvata(t, dir), Track: 1, Frames: 20, Speed: 100, Out: filepath.Join(dir, "a.comp")})
+	if !strings.Contains(comps["a"], `Text(\"MPH\")`) || strings.Contains(out, "units") {
+		t.Fatalf("imperial units not applied: %q", out)
+	}
+
+	// A design saved before the units option keeps its fixed labels, so it
+	// stays metric and the panel says why.
+	designs := t.TempDir()
+	old, _ := design.Find("clean", "")
+	old.ID, old.Name = "old", "Old"
+	old.Template = strings.NewReplacer("{{speedunit}}", "km/h", "{{heightunit}}", "m").Replace(old.Template)
+	if err := old.Save(filepath.Join(designs, "old")); err != nil {
+		t.Fatal(err)
+	}
+	out, comps = runWith(t, map[string]any{"design": "old", "designs": designs, "units": "imperial"}, shotJob{ID: "b", File: wavyAvata(t, dir), Track: 1, Frames: 20, Speed: 100, Out: filepath.Join(dir, "b.comp")})
+	if !strings.Contains(comps["b"], "km/h") || !strings.Contains(out, "design Old shows fixed km/h and m labels") {
+		t.Fatalf("old design: %q", out)
+	}
 }

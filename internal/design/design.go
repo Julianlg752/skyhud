@@ -184,6 +184,19 @@ type Vars struct {
 	Colors     map[string][3]float64 // overrides of the design's colors
 	Font       string                // override of the design's font
 	GLabel     string                // g-force label: "G", or "G (EST)" when estimated
+	Imperial   bool                  // units: mph and ft instead of km/h and m
+}
+
+// unitPlaceholders are the labels that follow the panel's units.
+var unitPlaceholders = []string{"{{speedunit}}", "{{SPEEDUNIT}}", "{{heightunit}}", "{{HEIGHTUNIT}}"}
+
+// HasUnits reports whether the design labels speed and height with the unit
+// placeholders. Designs with fixed labels (made before the units option)
+// always get metric values, so their labels stay right.
+func (d *Design) HasUnits() bool {
+	speed := strings.Contains(d.Template, unitPlaceholders[0]) || strings.Contains(d.Template, unitPlaceholders[1])
+	height := strings.Contains(d.Template, unitPlaceholders[2]) || strings.Contains(d.Template, unitPlaceholders[3])
+	return speed && height
 }
 
 // Render returns the design's tools with placeholders filled.
@@ -204,8 +217,14 @@ func (d *Design) Render(v Vars) (string, error) {
 	if v.GLabel == "" {
 		v.GLabel = "G"
 	}
+	speed, height := "km/h", "m"
+	if v.Imperial {
+		speed, height = "mph", "ft"
+	}
 	repl := []string{"{{mono}}", v.Mono, "{{sans}}", v.Sans, "{{font}}", font,
-		"{{aspect}}", num(v.Aspect), "{{path}}", v.Path, "{{glabel}}", v.GLabel}
+		"{{aspect}}", num(v.Aspect), "{{path}}", v.Path, "{{glabel}}", v.GLabel,
+		unitPlaceholders[0], speed, unitPlaceholders[1], strings.ToUpper(speed),
+		unitPlaceholders[2], height, unitPlaceholders[3], strings.ToUpper(height)}
 	colors := map[string][3]float64{}
 	for k, c := range d.Colors {
 		colors[k] = c

@@ -247,3 +247,32 @@ func TestCompRefusesUncheckedDesign(t *testing.T) {
 		t.Fatalf("err %v, comp has payload: %v", err, strings.Contains(b.String(), "execute"))
 	}
 }
+
+func TestImperialUnits(t *testing.T) {
+	s := DefaultSettings()
+	s.Units = Imperial
+	out := comp(t, steady(10, 100, 10, 1, 0), goggles(t), s)
+	for _, want := range []string{"[0] = { 62.13711922", "[0] = { 32.80839895", "mph", "ft"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("imperial comp lacks %q", want)
+		}
+	}
+	metric := comp(t, steady(10, 100, 10, 1, 0), goggles(t), DefaultSettings())
+	for _, want := range []string{"[0] = { 100", "[0] = { 10", "km/h"} {
+		if !strings.Contains(metric, want) {
+			t.Errorf("metric comp lacks %q", want)
+		}
+	}
+}
+
+func TestImperialKeepsMetricForFixedUnitDesign(t *testing.T) {
+	d := goggles(t)
+	fixed := *d
+	fixed.Template = strings.NewReplacer("{{speedunit}}", "km/h", "{{heightunit}}", "m").Replace(d.Template)
+	s := DefaultSettings()
+	s.Units = Imperial
+	out := comp(t, steady(10, 100, 10, 1, 0), &fixed, s)
+	if !strings.Contains(out, "[0] = { 100") || strings.Contains(out, "mph") {
+		t.Error("a design with fixed km/h labels must keep metric values")
+	}
+}
