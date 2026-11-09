@@ -43,6 +43,7 @@ type settings struct {
 	Designs string                `json:"designs"` // the user's designs folder
 	Show    map[hud.Piece]bool    `json:"show"`
 	Height  hud.HeightMode        `json:"height"`
+	Units   hud.Units             `json:"units"` // metric (default) or imperial
 	Scale   float64               `json:"scale"`
 	Colors  map[string][3]float64 `json:"colors"`
 	Font    string                `json:"font"`
@@ -82,6 +83,9 @@ func (s *settings) merge(id string) hud.Settings {
 	}
 	if s.Scale > 0 {
 		out.Scale = s.Scale
+	}
+	if s.Units == hud.Imperial {
+		out.Units = hud.Imperial
 	}
 	if s.LayoutVersion >= 2 {
 		for p, v := range s.Layouts[id] {
@@ -149,6 +153,9 @@ func hudCommand(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 	s := jobs.Settings.merge(d.ID)
+	if s.Units == hud.Imperial && !d.HasUnits() {
+		designNote = strings.TrimPrefix(designNote+"; design "+d.Name+" shows fixed km/h and m labels, so it stays metric (the design guide shows how to add mph and ft)", "; ")
+	}
 	style := hud.Style{Mono: hud.DefaultFont(runtime.GOOS), Sans: hud.DefaultSans(runtime.GOOS), Aspect: jobs.Aspect}
 	if jobs.Settings != nil {
 		logs = jobs.Settings.Logs

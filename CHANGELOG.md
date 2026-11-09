@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+**New**
+- Units: show speed and height in mph and feet instead of km/h and meters (panel: **Units**). Designs label them with the new `{{speedunit}}` and `{{heightunit}}` placeholders; a design saved with fixed "km/h" and "m" labels stays metric, and the panel says so.
+
 **Fixes**
 - The SkyHUD panel now uses two columns and fits on a laptop screen. Before, the window was taller than a 14-inch MacBook screen: the "Scan a flight folder…" button and the message box at the bottom were cut off, and the hint under "Use this shot's layout for all" was squashed.
 
