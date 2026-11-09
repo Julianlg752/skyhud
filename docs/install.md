@@ -43,7 +43,7 @@ The HUD works from the Avata 2's own video without any key: speed, height, horiz
 1. Sign in at [developer.dji.com](https://developer.dji.com/) with your DJI account.
 2. Click **Create App**, choose **Open API** as the app type, and fill in a name, category and description (anything sensible).
 3. Activate the app with the link DJI emails you.
-4. On your developer page, open the app and copy its **App Key**.
+4. On your developer page, open the app and copy its key (DJI labels it **SDK key** or App Key).
 5. Paste it when the install script asks, or later in the SkyHUD panel (**Save key**).
 
 Where it goes: your system keychain (macOS Keychain, Windows Credential Manager), never a file. SkyHUD sends it only to DJI's key service, once per encrypted log; the unlocked keys are cached on your computer so a log is never sent twice. From a terminal: `skyhud key status` says whether a key is stored, and `skyhud key set` reads a new one from standard input.
