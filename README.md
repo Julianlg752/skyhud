@@ -4,13 +4,14 @@ A DaVinci Resolve plugin that turns the flight data hidden in your drone and act
 
 [![The Race design over a DJI Avata 2 flight](site/media/design-race.jpg)](https://julianlg752.github.io/skyhud/)
 
-**[Watch the 80-second walkthrough](https://julianlg752.github.io/skyhud/)** on the SkyHUD page.
+**[Watch the 80-second walkthrough](https://julianlg752.github.io/skyhud/)** on the SkyHUD page: install, the panel, the four designs, Avata 2 and GoPro. Flying a DJI Avata 2? Two one-minute [video guides](https://julianlg752.github.io/skyhud/#guides) show how to get your flight logs from DJI Fly and your free DJI API key.
 
 Most pilots post their goggles' OSD as it is. SkyHUD lets you edit and grade your footage first, then add a polished HUD on its own track, in one of four designs or your own. The grade never touches the HUD, and the HUD is never burned into the video: you can move, resize, restyle or remove it at any time.
 
 - **Cameras:** GoPro (HERO with GPS; tested on a HERO10 Black, Gyroflow exports included) and DJI Avata 2. Betaflight blackbox logs come after the first release.
 - **Resolve:** free and Studio on macOS (Apple silicon and Intel) and Windows. Tested so far on Resolve Studio 21 on macOS; Windows and free Resolve checks are in progress.
 - **Designs:** Goggles, Race, Fighter jet and Clean, plus your own, with or without Fusion.
+- **Units:** km/h and meters, or mph and feet.
 
 ## Quick start
 
