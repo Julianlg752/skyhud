@@ -10,7 +10,8 @@
 
 **Docs**
 - Install steps say to extract the zip first, and explain how to get past macOS's first-run block (System Settings > Privacy & Security > Open Anyway; right-click > Open no longer works on macOS 15 and later).
-- New install guide section on copying DJI Fly flight logs from an iPhone or Android phone, and scripts for two new tutorial videos (flight logs, DJI key).
+- New install guide section on copying DJI Fly flight logs from an iPhone or Android phone.
+- Two one-minute video guides on the SkyHUD page: getting your flight logs from DJI Fly, and getting your free DJI API key (DJI calls it the SDK key).
 
 ## 0.1.1 (2026-11-06)
 

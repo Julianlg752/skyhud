@@ -38,6 +38,8 @@ SkyHUD keeps its own copy in `C:\ProgramData\SkyHUD\bin\`, so you can delete the
 
 ## DJI API key (Avata 2 only)
 
+Video guide (1 minute): [Get your free DJI API key](https://julianlg752.github.io/skyhud/#guides).
+
 The HUD works from the Avata 2's own video without any key: speed, height, horizon, flight path and an estimated g-force. Stick positions and battery come from the DJI Fly flight logs on your phone, and newer logs are encrypted. To unlock them SkyHUD needs your own DJI developer API key:
 
 1. Sign in at [developer.dji.com](https://developer.dji.com/) with your DJI account.
@@ -49,6 +51,8 @@ The HUD works from the Avata 2's own video without any key: speed, height, horiz
 Where it goes: your system keychain (macOS Keychain, Windows Credential Manager), never a file. SkyHUD sends it only to DJI's key service, once per encrypted log; the unlocked keys are cached on your computer so a log is never sent twice. From a terminal: `skyhud key status` says whether a key is stored, and `skyhud key set` reads a new one from standard input.
 
 ## Getting your flight logs (Avata 2 only)
+
+Video guide (1 minute): [Get your flight logs from DJI Fly](https://julianlg752.github.io/skyhud/#guides).
 
 DJI Fly saves a `DJIFlightRecord_*.txt` log for every flight. Open DJI Fly with your goggles connected after flying, so the latest flights reach your phone. Then copy them to your computer:
 
